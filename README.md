@@ -3,6 +3,7 @@
 ### 1 - Wellcome
 ### 2 - Getting Setup
 ### 3 - Node.js Fundamentals (Note App)
+https://nodejs.org/api/
 ### 4 - Asynchronous Node.js (Wheather App)
 ### 5 - Web Servers and Application Deployment
 ### 6 - Testing Your Applications
