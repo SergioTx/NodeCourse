@@ -14,17 +14,15 @@ console.log(publicDirectoryPath);
 
 app.use(express.static(publicDirectoryPath));
 
-let count = 0;
+// let count = 0;
 
 io.on('connection', (socket) => {
   console.log('New websocket connection');
 
-  socket.emit('countUpdated', count);
+  socket.emit('message', 'Welcome!');
 
-  socket.on('increment', () => {
-    count++;
-    // socket.emit('countUpdated', count); // only for that connection
-    io.emit('countUpdated', count); // for all connected clients
+  socket.on('sendMessage', (message) => {
+    io.emit('message', message);
   });
 });
 
