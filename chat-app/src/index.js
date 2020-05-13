@@ -14,15 +14,19 @@ console.log(publicDirectoryPath);
 
 app.use(express.static(publicDirectoryPath));
 
-// let count = 0;
-
 io.on('connection', (socket) => {
   console.log('New websocket connection');
 
-  socket.emit('message', 'Welcome!');
+  socket.emit('message', 'Welcome!'); // only curren user
+  socket.broadcast.emit('message', 'A new user has joined!'); // all users but current
 
   socket.on('sendMessage', (message) => {
-    io.emit('message', message);
+    io.emit('message', message); // all users
+  });
+
+  // Built-in event for user disconnected
+  socket.on('disconnect', () => {
+    io.emit('message', 'User has left');
   });
 });
 
