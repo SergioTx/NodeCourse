@@ -18,12 +18,18 @@ console.log(publicDirectoryPath);
 app.use(express.static(publicDirectoryPath));
 
 io.on('connection', (socket) => {
-  console.log('New websocket connection');
+  socket.on('join', ({ username, room }) => {
+    socket.join(room);
 
-  socket.emit('message', generateMessage('Welcome!')); // only curren user
-  socket.broadcast.emit('message', generateMessage('A new user has joined!')); // all users but current
+    socket
+      .to(room) // only to that room
+      .emit('message', generateMessage('Welcome!')); // only curren user
+    socket.broadcast
+      .to(room) // only to that room
+      .emit('message', generateMessage(`${username} has joined!`)); // all users but current with broadcast
+  });
 
-  socket.on('sendMessage', (message, callback) => {
+  socket.to('test room').on('sendMessage', (message, callback) => {
     const filter = new Filter();
     if (filter.isProfane(message)) {
       return callback('Profanity is not allowed');
