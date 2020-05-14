@@ -3,6 +3,12 @@ const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
+const {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom,
+} = require('./utils/users');
 
 const { generateMessage, generateUrl } = require('./utils/messages');
 
@@ -18,15 +24,23 @@ console.log(publicDirectoryPath);
 app.use(express.static(publicDirectoryPath));
 
 io.on('connection', (socket) => {
-  socket.on('join', ({ username, room }) => {
-    socket.join(room);
+  socket.on('join', (options, callback) => {
+    const { error, user } = addUser({ id: socket.id, ...options });
+
+    if (error) {
+      return callback(error);
+    }
+
+    socket.join(user.room);
 
     socket
-      .to(room) // only to that room
+      .to(user.room) // only to that room
       .emit('message', generateMessage('Welcome!')); // only curren user
     socket.broadcast
-      .to(room) // only to that room
-      .emit('message', generateMessage(`${username} has joined!`)); // all users but current with broadcast
+      .to(user.room) // only to that room
+      .emit('message', generateMessage(`${user.username} has joined!`)); // all users but current with broadcast
+
+    callback();
   });
 
   socket.to('test room').on('sendMessage', (message, callback) => {
@@ -49,7 +63,14 @@ io.on('connection', (socket) => {
 
   // Built-in event for user disconnected
   socket.on('disconnect', () => {
-    io.emit('message', generateMessage('User has left'));
+    const user = removeUser(socket.id);
+
+    if (user) {
+      io.to(user.room).emit(
+        'message',
+        generateMessage(`${user.username} has left`)
+      );
+    }
   });
 });
 
