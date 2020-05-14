@@ -35,28 +35,37 @@ io.on('connection', (socket) => {
 
     socket
       .to(user.room) // only to that room
-      .emit('message', generateMessage('Welcome!')); // only curren user
+      .emit('message', generateMessage('Admin', 'Welcome!')); // only curren user
     socket.broadcast
       .to(user.room) // only to that room
-      .emit('message', generateMessage(`${user.username} has joined!`)); // all users but current with broadcast
+      .emit(
+        'message',
+        generateMessage('Admin', `${user.username} has joined!`)
+      ); // all users but current with broadcast
 
     callback();
   });
 
-  socket.to('test room').on('sendMessage', (message, callback) => {
+  socket.on('sendMessage', (message, callback) => {
+    const user = getUser(socket.id);
+
     const filter = new Filter();
     if (filter.isProfane(message)) {
       return callback('Profanity is not allowed');
     }
 
-    io.emit('message', generateMessage(message)); // all users
+    io.to(user.room).emit('message', generateMessage(user.username, message)); // all users in the room
     callback();
   });
 
   socket.on('sendLocation', ({ latitude, longitude }, callback) => {
-    io.emit(
+    const user = getUser(socket.id);
+    io.to(user.room).emit(
       'locationMessage',
-      generateUrl(`https://google.com/maps?q=${latitude},${longitude}`)
+      generateUrl(
+        user.username,
+        `https://google.com/maps?q=${latitude},${longitude}`
+      )
     );
     callback();
   });
@@ -68,7 +77,7 @@ io.on('connection', (socket) => {
     if (user) {
       io.to(user.room).emit(
         'message',
-        generateMessage(`${user.username} has left`)
+        generateMessage('Admin', `${user.username} has left`)
       );
     }
   });
